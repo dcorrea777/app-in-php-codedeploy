@@ -62,6 +62,9 @@ jobs:
                     aws-secret-access-key: ${{ secrets.SECRET_KEY }}
                     aws-region: us-east-1
             -
+                name: Inject slug/short variables
+                uses: rlespinasse/github-slug-action@v4
+            -
                 name: download artifact
                 uses: actions/download-artifact@v3
                 with:
@@ -70,7 +73,7 @@ jobs:
                 name: s3
                 env:
                     bucket: dcorrea-artifacts
-                    version: v1
+                    version: ${{ env.GITHUB_SHA }}
                 run: aws s3 cp "app.zip" "s3://${bucket}/app-in-php-code-deploy/${version}.zip" --region us-east-1
     deploy_on_production:
         name: Deploy (production)
@@ -86,15 +89,20 @@ jobs:
                     aws-secret-access-key: ${{ secrets.SECRET_KEY }}
                     aws-region: us-east-1
             -
+                name: Inject slug/short variables
+                uses: rlespinasse/github-slug-action@v4
+            -
                 name: aws code deploy
                 id: codedeploy
+                env:
+                    version: ${{ env.GITHUB_SHA }}
                 run: |
                     CODE_DEPLOY=$(aws deploy create-deployment \
                         --region "us-east-1" \
                         --application-name "app-in-php-code-deploy" \
                         --deployment-group-name "app-in-php-code-deploy-group" \
                         --description "teste" \
-                        --s3-location bucket="dcorrea-artifacts",bundleType="zip",key="app-in-php-code-deploy/v1.zip" | jq -r '.deploymentId') && {
+                        --s3-location bucket="dcorrea-artifacts",bundleType="zip",key="app-in-php-code-deploy/${version}.zip" | jq -r '.deploymentId') && {
                             echo "codedeploy-deployment-id=$CODE_DEPLOY" >> "$GITHUB_OUTPUT"
                         }
             -
