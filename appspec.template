@@ -1,0 +1,14 @@
+version: 0.0
+os: linux
+
+files:
+    -
+        source: /
+        destination: /home/ubuntu/app/{{DP_BRANCH}}
+hooks:
+    BeforeInstall:
+        - location: hooks/beforeInstall.sh
+    AfterInstall:
+        - location: hooks/afterInstall.sh
+    ApplicationStart:
+        - location: hooks/applicationStart.sh

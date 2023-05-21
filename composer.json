@@ -1,0 +1,21 @@
+{
+    "name": "dcorrea/app-in-php-code-deploy",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Danilo Correa",
+            "email": "danilosilva87@gmail.com"
+        }
+    ],
+    "require": {},
+    "scripts": {
+        "zip": "zip -r $(pwd)/dist/app.zip src vendor hooks appspec.yml",
+        "s3": "aws s3 cp $(pwd)/dist/app.zip 's3://dcorrea-artifacts/app-in-php-code-deploy/app.zip' --region us-east-1 --profile danilosilva87",
+        "deploy": ["@zip", "@s3"]
+    }
+}

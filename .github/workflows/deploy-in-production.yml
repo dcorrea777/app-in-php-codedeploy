@@ -1,0 +1,62 @@
+name: Deploy in production
+
+on:
+    push:
+        branches:
+            - main
+            - v*
+jobs:
+    build:
+        name: Build (Composer)
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            -
+                name: Check code
+                uses: actions/checkout@v3
+            -
+                name: install php
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '8.1'
+                    coverage: none
+                    extensions: mongodb-1.14.0
+                    tools: pecl
+            -
+                name: install dependencies with composer
+                uses: "ramsey/composer-install@v2"
+            -
+                name: compress application
+                run: |
+                    touch .env
+                    zip -r $(pwd)/dist/app.zip src hooks public vendor .env
+            -
+                name: store artifact
+                uses: actions/upload-artifact@v3
+                with:
+                    name: app-php
+                    path: dist/app.zip
+    artifact_on_production:
+        name: Publish Artifact (production)
+        runs-on: ubuntu-latest
+        needs: build
+        timeout-minutes: 5
+        steps:
+            -
+                name: configure aws credentials
+                uses: aws-actions/configure-aws-credentials@v1-node16
+                with:
+                    aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+                    aws-secret-access-key: ${{ secrets.SECRET_KEY }}
+                    aws-region: us-east-1
+            -
+                name: download artifact
+                uses: actions/download-artifact@v3
+                with:
+                    name: app-php
+            -
+                name: s3
+                env:
+                    bucket: dcorrea-artifacts
+                    version: v1
+                run: aws s3 cp "app.zip" "s3://${bucket}/app-in-php-code-deploy/${version}.zip" --region us-east-1
