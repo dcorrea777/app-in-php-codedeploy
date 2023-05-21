@@ -72,3 +72,33 @@ jobs:
                     bucket: dcorrea-artifacts
                     version: v1
                 run: aws s3 cp "app.zip" "s3://${bucket}/app-in-php-code-deploy/${version}.zip" --region us-east-1
+    deploy_on_production:
+        name: Deploy (production)
+        runs-on: ubuntu-latest
+        needs: artifact_on_production
+        timeout-minutes: 5
+        steps:
+            -
+                name: configure aws credentials
+                uses: aws-actions/configure-aws-credentials@v1-node16
+                with:
+                    aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+                    aws-secret-access-key: ${{ secrets.SECRET_KEY }}
+                    aws-region: us-east-1
+            -
+                name: aws code deploy
+                id: codedeploy
+                run: |
+                    CODE_DEPLOY=$(aws deploy create-deployment \
+                        --region "us-east-1" \
+                        --application-name "app-in-php-code-deploy" \
+                        --deployment-group-name "app-in-php-code-deploy-group" \
+                        --description "teste" \
+                        --s3-location bucket="dcorrea-artifacts",bundleType="zip",key="app-in-php-code-deploy/v1.zip" | jq -r '.deploymentId') && {
+                            echo "codedeploy-deployment-id=$CODE_DEPLOY" >> "$GITHUB_OUTPUT"
+                        }
+            -
+                name: Wait deploy
+                uses: geekcell/github-action-aws-codedeploy-wait@v1.0.0
+                with:
+                    codedeploy-deployment-id: ${{ steps.codedeploy.outputs.codedeploy-deployment-id }}
