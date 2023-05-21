@@ -4,7 +4,7 @@ os: linux
 files:
     -
         source: /
-        destination: /home/ubuntu/app/{{DP_BRANCH}}
+        destination: /home/ubuntu/app/{{app_version}}
 hooks:
     BeforeInstall:
         - location: hooks/beforeInstall.sh

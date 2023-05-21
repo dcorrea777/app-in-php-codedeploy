@@ -36,3 +36,6 @@ terraform.rc
 # PHP
 composer.phar
 /vendor/
+
+# AWS
+appspec.yml

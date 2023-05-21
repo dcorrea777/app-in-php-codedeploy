@@ -26,10 +26,22 @@ jobs:
                 name: install dependencies with composer
                 uses: "ramsey/composer-install@v2"
             -
+                name: Inject slug/short variables
+                uses: rlespinasse/github-slug-action@v4
+            -
+                name: generate appspec.yml file
+                env:
+                    app_version: ${{ env.GITHUB_REF_NAME_SLUG }}
+                run: |
+                    curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
+                    chmod +x mo
+                    sudo mv mo /usr/local/bin/
+                    mo appspec.template | tee appspec.yml
+            -
                 name: compress application
                 run: |
                     touch .env
-                    zip -r $(pwd)/dist/app.zip src hooks public vendor .env
+                    zip -r $(pwd)/dist/app.zip src hooks public vendor appspec.yml .env
             -
                 name: store artifact
                 uses: actions/upload-artifact@v3
