@@ -7,6 +7,7 @@ resource "aws_codedeploy_deployment_group" "app" {
     app_name                = aws_codedeploy_app.app.name
     deployment_group_name   = "${var.project_name}-group"
     service_role_arn        = aws_iam_role.code_app.arn
+    autoscaling_groups      = [aws_autoscaling_group.app.id]
 
     ec2_tag_set {
         ec2_tag_filter {
